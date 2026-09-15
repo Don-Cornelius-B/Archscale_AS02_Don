@@ -13,8 +13,18 @@ In complex construction projects, critical directives, approvals, and snags are 
 3. **Structured Payload Output**: Enforces a strict snake_case JSON Pydantic data contract mapping to `summary`, `decisions`, `actions`, and `conflict`.
 4. **Role-based Triage UI**: Frontend dashboard consumes the structured output to display instant clash alerts and role-filtered action lists.
 
+## Core Feature Checklist (Problem Statement AS-02 Compliance)
+
+- [x] **Conversation Capture**: Ingestion across multiple informal & formal AEC channels (WhatsApp, Email, Site Notes) via quick-load presets or custom manual entry.
+- [x] **Intelligent Summarization & Noise Removal**: Filters site banter and distills communications into concise 1-sentence executive summaries and locked directives.
+- [x] **Action & Responsibility Extraction**: Dissects tasks with inferred responsible roles (`Architect`, `Contractor`, `Supplier`, `Client`), zones/rooms, and urgency levels (`Low`, `Normal`, `Urgent`).
+- [x] **Active Baseline Conflict Detection (Differentiator 1)**: Reconciles incoming directives against locked drawing revisions (`REV 05`) and material specifications (`Italian Statuario Marble`), triggering critical clash warnings before construction errors happen.
+- [x] **Multi-Role Triage Filtering (Differentiator 2)**: Single-click stakeholder filtering enabling contractors, architects, and clients to isolate their immediate deliverables.
+- [x] **Searchable Project Memory & Historical Audit Trail**: Persistent, zero-lag searchable ledger of all past communications, decisions, drawing clashes, and action logs with instant one-click "Re-inspect in Active Triage" capability.
+
 ## Differentiators
 - **Active Baseline Conflict Detection**: Unlike generic summarizers, this engine inherently knows the active drawing revisions and material specs. If a site supervisor references "Rev 04" when "Rev 05" is active, it flags a critical conflict before cement is poured.
+- **Searchable Project Memory & Audit Trail**: Real-time multi-field search ledger indexing raw snippets, summaries, decisions, and assigned tasks so teams never lose track of historical context or site agreements.
 - **Deterministic Mock Fallback**: Ensures a flawless presentation experience. If the AI service fails or hits rate limits, the backend gracefully falls back to deterministic pre-baked scenarios that map 1:1 with the demo presets.
 - **Accountability Extraction**: Automatically tags the responsible role (`Architect`, `Contractor`, `Supplier`, `Client`) and priority level for every inferred task.
 

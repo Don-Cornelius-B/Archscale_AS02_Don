@@ -1,4 +1,4 @@
-from .schemas import ActiveBaselineState, PresetScenario, ExtractedPayload, ActionItem, ConflictAlert
+from .schemas import ActiveBaselineState, PresetScenario, ExtractedPayload, ActionItem, ConflictAlert, ProjectHistoryItem
 
 ACTIVE_BASELINE = ActiveBaselineState(
     project_name="Skyline Residences - Phase 2",
@@ -100,5 +100,89 @@ PRESETS = [
         channel="WhatsApp",
         sender="Client",
         raw_text="Approved master layout except bathroom fittings."
+    )
+]
+
+PROJECT_HISTORY = [
+    ProjectHistoryItem(
+        id="hist-001",
+        timestamp="Today, 09:15 AM",
+        channel="Email",
+        sender="Site Supervisor",
+        raw_text="Please proceed with plumbing layout as per Rev 04 drawings.",
+        summary="Direction to proceed with outdated plumbing layout.",
+        decisions=[],
+        actions=[],
+        conflict=ConflictAlert(
+            is_conflict=True,
+            severity="critical",
+            reason="Referencing REV 04 when active project drawing is locked to REV 05."
+        )
+    ),
+    ProjectHistoryItem(
+        id="hist-002",
+        timestamp="Yesterday, 04:30 PM",
+        channel="WhatsApp",
+        sender="Client",
+        raw_text="Use previous marble in the foyer.",
+        summary="Request to use 'previous marble' in the foyer.",
+        decisions=[],
+        actions=[
+            ActionItem(
+                task="Confirm if 'previous marble' refers to Italian Statuario Marble.",
+                assigned_role="Architect",
+                zone_or_room="Foyer",
+                priority="Normal"
+            )
+        ],
+        conflict=ConflictAlert(
+            is_conflict=True,
+            severity="warning",
+            reason="Ambiguous spec: Must confirm if previous refers to Italian Statuario Marble."
+        )
+    ),
+    ProjectHistoryItem(
+        id="hist-003",
+        timestamp="14 Sep 2026, 02:10 PM",
+        channel="Site Note",
+        sender="Inspector",
+        raw_text="Waterproofing failed inspection at master bath. Contractor redo by Thursday.",
+        summary="Waterproofing failed inspection at master bath.",
+        decisions=[],
+        actions=[
+            ActionItem(
+                task="Redo waterproofing in master bath by Thursday.",
+                assigned_role="Contractor",
+                zone_or_room="Master Bath",
+                priority="Urgent"
+            )
+        ],
+        conflict=ConflictAlert(
+            is_conflict=False,
+            severity="none",
+            reason=None
+        )
+    ),
+    ProjectHistoryItem(
+        id="hist-004",
+        timestamp="12 Sep 2026, 11:00 AM",
+        channel="WhatsApp",
+        sender="Client",
+        raw_text="Approved master layout except bathroom fittings.",
+        summary="Approval given for master layout excluding bathroom fittings.",
+        decisions=["Approved master layout (except bathroom fittings)."],
+        actions=[
+            ActionItem(
+                task="Review and resolve bathroom fittings for sign-off.",
+                assigned_role="Architect",
+                zone_or_room="Master Bath",
+                priority="Normal"
+            )
+        ],
+        conflict=ConflictAlert(
+            is_conflict=False,
+            severity="none",
+            reason=None
+        )
     )
 ]

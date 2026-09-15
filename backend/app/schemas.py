@@ -36,3 +36,14 @@ class PresetScenario(BaseModel):
     channel: str
     sender: str
     raw_text: str
+
+class ProjectHistoryItem(BaseModel):
+    id: str
+    timestamp: str
+    channel: str
+    sender: Optional[str] = None
+    raw_text: str
+    summary: str
+    decisions: List[str] = Field(default_factory=list)
+    actions: List[ActionItem] = Field(default_factory=list)
+    conflict: ConflictAlert

@@ -20,3 +20,8 @@ export const processMessage = async (payload) => {
   const response = await api.post('/api/process', payload);
   return response.data;
 };
+
+export const fetchProjectHistory = async () => {
+  const response = await api.get('/api/history');
+  return response.data;
+};
