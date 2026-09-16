@@ -41,26 +41,15 @@ export default function ProjectMemory({ history = [], onSelectHistoryItem }) {
     if (!q) return history;
 
     return history.filter((item) => {
-      // 1. Raw Text
       if (item.raw_text && item.raw_text.toLowerCase().includes(q)) return true;
-
-      // 2. Extracted Summary
       if (item.summary && item.summary.toLowerCase().includes(q)) return true;
-
-      // 3. Locked Decisions
       if (item.decisions && item.decisions.some(d => d.toLowerCase().includes(q))) return true;
-
-      // 4. Actions: Task, Role, Zone
       if (item.actions && item.actions.some(a => 
         (a.task && a.task.toLowerCase().includes(q)) ||
         (a.assigned_role && a.assigned_role.toLowerCase().includes(q)) ||
         (a.zone_or_room && a.zone_or_room.toLowerCase().includes(q))
       )) return true;
-
-      // 5. Conflict Reason
       if (item.conflict?.reason && item.conflict.reason.toLowerCase().includes(q)) return true;
-
-      // 6. Sender or Channel
       if (item.sender && item.sender.toLowerCase().includes(q)) return true;
       if (item.channel && item.channel.toLowerCase().includes(q)) return true;
 
@@ -79,8 +68,8 @@ export default function ProjectMemory({ history = [], onSelectHistoryItem }) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search historical project memory (decisions, zones, materials, keywords)..."
-          className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-600 shadow-inner"
+          placeholder="Search memory (decisions, tasks, specs)..."
+          className="w-full text-xs sm:text-sm truncate pl-10 pr-10 py-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-600 shadow-inner"
         />
         {searchQuery && (
           <button
@@ -105,30 +94,30 @@ export default function ProjectMemory({ history = [], onSelectHistoryItem }) {
         )}
       </div>
 
-      {/* Feed List */}
-      {filteredHistory.length === 0 ? (
-        <div className="glass-panel p-10 text-center flex flex-col items-center justify-center gap-3">
-          <div className="w-12 h-12 rounded-full border border-dashed border-zinc-700 flex items-center justify-center text-zinc-600">
-            <Search className="w-5 h-5" />
+      {/* Scrollable Feed List */}
+      <div className="max-h-[calc(100vh-320px)] overflow-y-auto pr-1 space-y-4">
+        {filteredHistory.length === 0 ? (
+          <div className="glass-panel p-10 text-center flex flex-col items-center justify-center gap-3 mt-2">
+            <div className="w-12 h-12 rounded-full border border-dashed border-zinc-700 flex items-center justify-center text-zinc-600">
+              <Search className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-zinc-300">No project memory matches found</h4>
+              <p className="text-xs text-zinc-500 max-w-sm">
+                No historical communications or decisions matched &ldquo;{searchQuery}&rdquo;. Try another material, room name, or revision tag.
+              </p>
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+              >
+                Clear search filter
+              </button>
+            )}
           </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-medium text-zinc-300">No project memory matches found</h4>
-            <p className="text-xs text-zinc-500 max-w-sm">
-              No historical communications or decisions matched &ldquo;{searchQuery}&rdquo;. Try another material, room name, or revision tag.
-            </p>
-          </div>
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-            >
-              Clear search filter
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredHistory.map((item) => {
+        ) : (
+          filteredHistory.map((item) => {
             const channel = channelConfig[item.channel] || channelConfig.Email;
             const ChannelIcon = channel.icon;
             const isConflict = item.conflict?.is_conflict;
@@ -162,7 +151,7 @@ export default function ProjectMemory({ history = [], onSelectHistoryItem }) {
                           : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                       }`}>
                         <AlertTriangle className="w-3 h-3" />
-                        {isCritical ? 'REV 04 Clash Flagged' : 'Spec Warning'}
+                        {isCritical ? 'Clash Flagged' : 'Spec Warning'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
@@ -250,9 +239,9 @@ export default function ProjectMemory({ history = [], onSelectHistoryItem }) {
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 }

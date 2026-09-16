@@ -6,7 +6,6 @@ import RoleFilterBar from './components/RoleFilterBar';
 import ActionList from './components/ActionList';
 import ProjectMemory from './components/ProjectMemory';
 import { getBaseline, getPresets, processMessage, fetchProjectHistory } from './services/api';
-import { Layers, History } from 'lucide-react';
 
 const DEFAULT_HISTORY = [
   {
@@ -99,7 +98,6 @@ export default function App() {
   const [selectedRole, setSelectedRole] = useState('All');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'memory'
   const [history, setHistory] = useState(DEFAULT_HISTORY);
 
   useEffect(() => {
@@ -117,10 +115,31 @@ export default function App() {
         setPresets(presetsData);
         if (historyData && Array.isArray(historyData) && historyData.length > 0) {
           setHistory(historyData);
+          setPayload({
+            summary: historyData[0].summary,
+            decisions: historyData[0].decisions || [],
+            actions: historyData[0].actions || [],
+            conflict: historyData[0].conflict
+          });
+        } else {
+          // Initialize payload with the first item in default history so triage isn't empty
+          setPayload({
+            summary: DEFAULT_HISTORY[0].summary,
+            decisions: DEFAULT_HISTORY[0].decisions || [],
+            actions: DEFAULT_HISTORY[0].actions || [],
+            conflict: DEFAULT_HISTORY[0].conflict
+          });
         }
       } catch (err) {
         console.error("Failed to load initial data", err);
         setError("Failed to connect to backend engine. Ensure the server is running.");
+        // Still init payload to fallback default history
+        setPayload({
+          summary: DEFAULT_HISTORY[0].summary,
+          decisions: DEFAULT_HISTORY[0].decisions || [],
+          actions: DEFAULT_HISTORY[0].actions || [],
+          conflict: DEFAULT_HISTORY[0].conflict
+        });
       }
     }
     loadInitialData();
@@ -147,8 +166,6 @@ export default function App() {
       };
       setHistory((prev) => [newHistoryItem, ...prev]);
 
-      // Keep newly processed item in active triage view
-      setActiveTab('triage');
     } catch (err) {
       console.error("Failed to process message", err);
       setError("Processing failed. Please check backend connection.");
@@ -164,23 +181,22 @@ export default function App() {
       actions: item.actions || [],
       conflict: item.conflict
     });
-    setActiveTab('triage');
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header baseline={baseline} />
+      <Header baseline={baseline} payload={payload} />
       
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+      <main className="flex-1 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-950/50 border border-red-500/50 text-red-200 text-sm">
             {error}
           </div>
         )}
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Input */}
-          <div className="lg:col-span-5 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Column 1: Ingestion Feed (lg:col-span-3) */}
+          <div className="lg:col-span-3 space-y-6">
             <IngestionPanel 
               presets={presets} 
               onProcess={handleProcess} 
@@ -188,80 +204,43 @@ export default function App() {
             />
           </div>
 
-          {/* Right Column: Output / Memory */}
-          <div className="lg:col-span-7 space-y-4">
-            {/* View Switcher Tabs */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-2 p-1 bg-zinc-900/90 rounded-lg border border-zinc-800">
-                <button
-                  onClick={() => setActiveTab('triage')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                    activeTab === 'triage'
-                      ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  <Layers className="w-4 h-4 text-emerald-400" />
-                  <span>Active Triage View</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('memory')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                    activeTab === 'memory'
-                      ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
-                      : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  <History className="w-4 h-4 text-emerald-400" />
-                  <span>Searchable Project Memory</span>
-                  <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    {history.length}
-                  </span>
-                </button>
+          {/* Column 2: Active Triage & Clash Hub (lg:col-span-5) */}
+          <div className="lg:col-span-5 space-y-4">
+            <ConflictBanner conflict={payload?.conflict} />
+            
+            <div className="glass-panel p-6 shadow-xl">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">Active Triage & Clash Hub</h2>
+                <p className="text-sm text-zinc-400 mt-1">Real-time directive extraction & role assignments</p>
               </div>
+              
+              <RoleFilterBar 
+                selectedRole={selectedRole} 
+                onSelectRole={setSelectedRole} 
+              />
+              
+              <ActionList 
+                payload={payload} 
+                selectedRole={selectedRole} 
+              />
             </div>
+          </div>
 
-            {/* Tab 1: Active Triage View */}
-            {activeTab === 'triage' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                {payload && <ConflictBanner conflict={payload.conflict} />}
-                
-                <div className="glass-panel p-6">
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-zinc-100">Reconciliation Results</h2>
-                    <p className="text-sm text-zinc-400 mt-1">Structured payload extracted from unstructured input.</p>
-                  </div>
-                  
-                  <RoleFilterBar 
-                    selectedRole={selectedRole} 
-                    onSelectRole={setSelectedRole} 
-                  />
-                  
-                  <ActionList 
-                    payload={payload} 
-                    selectedRole={selectedRole} 
-                  />
-                </div>
+          {/* Column 3: Live Project Memory Ledger (lg:col-span-4) */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="glass-panel p-6 shadow-xl">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">Live Project Memory</h2>
+                <p className="text-sm text-zinc-400 mt-1">
+                  Searchable historical ledger of communications & locked directives
+                </p>
               </div>
-            )}
 
-            {/* Tab 2: Searchable Project Memory View */}
-            {activeTab === 'memory' && (
-              <div className="glass-panel p-6 animate-in fade-in duration-200">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-zinc-100">Searchable Project Memory & Audit Trail</h2>
-                  <p className="text-sm text-zinc-400 mt-1">
-                    Persistent ledger of historical communications, baseline clashes, and locked directives.
-                  </p>
-                </div>
-
-                <ProjectMemory 
-                  history={history} 
-                  onSelectHistoryItem={handleSelectHistoryItem} 
-                />
-              </div>
-            )}
+              <ProjectMemory 
+                history={history} 
+                onSelectHistoryItem={handleSelectHistoryItem} 
+              />
+            </div>
           </div>
         </div>
       </main>
